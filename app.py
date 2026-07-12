@@ -1,8 +1,9 @@
 import streamlit as st
-from ollama import chat
+from groq import Groq
 from ddgs import DDGS
 from datetime import date
 
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 st.set_page_config(
     page_title="Hitesh AI",
     page_icon="🤖"
@@ -75,10 +76,12 @@ If results are insufficient, clearly say so.
                 }
 
             with st.spinner("Soch raha hoon..."):
-                response = chat(
-                    model="gemma3:4b",
-                    messages=model_messages
-                )
+                response = client.chat.completions.create(
+    model="llama-3.3-70b-versatile",
+    messages=model_messages
+)
+
+answer = response.choices[0].message.content
 
             answer = response.message.content
             st.markdown(answer)
