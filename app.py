@@ -14,6 +14,8 @@ from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
 from xml.sax.saxutils import escape
 from pypdf import PdfReader
 from docx import Document
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.shared import Inches, Pt, RGBColor
 
 st.set_page_config(
     page_title="Nivora AI",
@@ -79,6 +81,49 @@ def make_pdf(text: str) -> bytes:
             story.append(Paragraph(safe, body_style))
     doc.build(story)
     return buffer.getvalue()
+
+def make_docx(text: str) -> bytes:
+    document = Document()
+    section = document.sections[0]
+    section.top_margin = Inches(0.7)
+    section.bottom_margin = Inches(0.7)
+    section.left_margin = Inches(0.8)
+    section.right_margin = Inches(0.8)
+    title = document.add_paragraph()
+    title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    title_run = title.add_run("Nivora AI")
+    title_run.bold = True
+    title_run.font.size = Pt(22)
+    title_run.font.color.rgb = RGBColor(37, 48, 74)
+    subtitle = document.add_paragraph("Professional AI Document")
+    subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    subtitle.runs[0].font.size = Pt(10)
+    subtitle.runs[0].font.color.rgb = RGBColor(101, 113, 138)
+    document.add_paragraph()
+    clean = re.sub(r"[*`]", "", text)
+    for line in clean.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("#"):
+            document.add_heading(line.lstrip("# "), level=min(line.count("#"), 3))
+        elif line.startswith(("- ", "• ")):
+            document.add_paragraph(line[2:], style="List Bullet")
+        else:
+            paragraph = document.add_paragraph(line)
+            paragraph.paragraph_format.space_after = Pt(7)
+            paragraph.paragraph_format.line_spacing = 1.15
+    output = io.BytesIO()
+    document.save(output)
+    return output.getvalue()
+
+def requested_file_type(text: str):
+    lowered = text.lower()
+    if any(word in lowered for word in ["pdf banao", "pdf bana", "pdf do", "as pdf", "pdf file"]):
+        return "pdf"
+    if any(word in lowered for word in ["word banao", "word file", "docx", "word document"]):
+        return "docx"
+    return None
 
 def extract_file_text(uploaded_file) -> str:
     name = uploaded_file.name.lower()
@@ -156,6 +201,13 @@ if send_voice and voice_recording:
         prompt = None
 
 if prompt:
+    export_type = requested_file_type(prompt)
+    previous_answer = next(
+        (item["content"] for item in reversed(st.session_state.messages) if item["role"] == "assistant"),
+        None,
+    )
+    refers_to_previous = any(word in prompt.lower() for word in ["iska", "iss answer", "this answer", "upar wale", "previous"])
+    direct_export_text = previous_answer if export_type and refers_to_previous and previous_answer else None
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
@@ -193,7 +245,9 @@ if prompt:
 
     with st.chat_message("assistant"):
         try:
-            if web_search:
+            if direct_export_text:
+                answer = "Your requested file is ready."
+            elif web_search:
                 with st.spinner("Searching reliable sources..."):
                     search_results = list(DDGS().text(prompt, region="in-en", safesearch="moderate", max_results=6))
                 web_context = "\n\n".join(
@@ -205,28 +259,27 @@ if prompt:
                     "content": f"Date: {date.today().isoformat()}\n\nQuestion: {prompt}\n\nWeb results:\n{web_context}\n\nAnswer using these sources and cite factual claims [1], [2].",
                 }
 
-            style_instruction = {
-                "Concise": "Keep the answer brief and focused.",
-                "Detailed": "Give a thorough, structured answer with useful context.",
-                "Balanced": "Use a balanced level of detail.",
-            }[response_style]
-            model_messages.append({"role": "system", "content": style_instruction})
+            if not direct_export_text:
+                style_instruction = {
+                    "Concise": "Keep the answer brief and focused.",
+                    "Detailed": "Give a thorough, structured answer with useful context.",
+                    "Balanced": "Use a balanced level of detail.",
+                }[response_style]
+                model_messages.append({"role": "system", "content": style_instruction})
 
-            with st.spinner("Thinking..."):
-                response = client.chat.completions.create(
-                    model="meta-llama/llama-4-scout-17b-16e-instruct" if image_parts else "llama-3.3-70b-versatile",
-                    messages=model_messages,
-                    temperature=0.35,
-                )
-            answer = response.choices[0].message.content
+                with st.spinner("Thinking..."):
+                    response = client.chat.completions.create(
+                        model="meta-llama/llama-4-scout-17b-16e-instruct" if image_parts else "llama-3.3-70b-versatile",
+                        messages=model_messages,
+                        temperature=0.35,
+                    )
+                answer = response.choices[0].message.content
             st.markdown(answer)
-            st.download_button(
-                "Download answer as PDF",
-                data=make_pdf(answer),
-                file_name="nivora-ai-answer.pdf",
-                mime="application/pdf",
-                use_container_width=True,
-            )
+            export_content = direct_export_text or answer
+            if export_type == "pdf":
+                st.download_button("Download PDF", make_pdf(export_content), "nivora-document.pdf", "application/pdf", use_container_width=True)
+            elif export_type == "docx":
+                st.download_button("Download Word document", make_docx(export_content), "nivora-document.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", use_container_width=True)
 
             if search_results:
                 with st.expander("Sources"):
