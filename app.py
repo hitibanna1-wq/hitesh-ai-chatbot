@@ -14,25 +14,25 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 html, body, [class*="css"] {font-family:'Inter',sans-serif;}
-.stApp {background:radial-gradient(circle at 50% -20%,#192441 0%,#090d17 42%,#06080e 100%);}
-[data-testid="stSidebar"] {background:rgba(8,12,22,.96);border-right:1px solid #20283a;}
+.stApp {background:radial-gradient(circle at 50% -15%,#425a91 0%,#253556 38%,#18243b 100%);}
+[data-testid="stSidebar"] {background:rgba(25,36,59,.97);border-right:1px solid #435473;}
 [data-testid="stHeader"] {background:transparent;}
 .block-container {max-width:960px;padding-top:2rem;padding-bottom:7rem;}
 .brand {font-size:1.35rem;font-weight:700;letter-spacing:-.03em;margin-bottom:.2rem;}
 .brand-dot {color:#7c8cff}.side-note {color:#818ba3;font-size:.78rem;margin-bottom:1.5rem;}
 .hero {text-align:center;padding:3rem 1rem 2rem;}
-.hero-badge {display:inline-block;color:#aab4ff;background:#151b33;border:1px solid #29325b;
+.hero-badge {display:inline-block;color:#e3e7ff;background:#344875;border:1px solid #6277ad;
 padding:.35rem .75rem;border-radius:999px;font-size:.76rem;font-weight:600;letter-spacing:.05em;}
 .hero h1 {font-size:clamp(2.2rem,6vw,4rem);line-height:1.05;letter-spacing:-.055em;margin:1rem 0 .7rem;
 background:linear-gradient(100deg,#fff 20%,#a9b4ff 60%,#8ce8dc);-webkit-background-clip:text;color:transparent;}
-.hero p {color:#9aa5ba;font-size:1.05rem;margin:auto;max-width:620px;}
-.suggestion {padding:1rem 1.1rem;border:1px solid #222c40;border-radius:14px;background:#0e1422;
-color:#c9d1df;min-height:88px;font-size:.9rem;}
-[data-testid="stChatMessage"] {background:rgba(14,20,34,.68);border:1px solid #222c40;border-radius:18px;padding:1rem;}
-[data-testid="stChatInput"] {border:1px solid #34405c;border-radius:18px;background:#101625;}
-.stButton>button {border-radius:12px;border:1px solid #2b3650;background:#121a2b;color:#dce3f2;}
+.hero p {color:#d0d7e7;font-size:1.05rem;margin:auto;max-width:620px;}
+.suggestion {padding:1rem 1.1rem;border:1px solid #566b95;border-radius:14px;background:rgba(37,53,86,.82);
+color:#f2f5fb;min-height:88px;font-size:.9rem;box-shadow:0 8px 24px rgba(7,12,25,.18);}
+[data-testid="stChatMessage"] {background:rgba(38,54,87,.72);border:1px solid #52688f;border-radius:18px;padding:1rem;}
+[data-testid="stChatInput"] {border:1px solid #7185ad;border-radius:18px;background:#263756;}
+.stButton>button {border-radius:12px;border:1px solid #60759f;background:#30446e;color:#f3f6fb;}
 .stButton>button:hover {border-color:#7c8cff;color:white;}
-hr {border-color:#20283a}.status {color:#78dcca;font-size:.78rem;}
+hr {border-color:#425578}.status {color:#87ead9;font-size:.78rem;}
 </style>
 """, unsafe_allow_html=True)
 
