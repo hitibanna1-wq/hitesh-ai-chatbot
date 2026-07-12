@@ -3,14 +3,11 @@ from groq import Groq
 from ddgs import DDGS
 from datetime import date
 
+st.set_page_config(page_title="Hitesh AI", page_icon="🤖")
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
-st.set_page_config(
-    page_title="Hitesh AI",
-    page_icon="🤖"
-)
 
-st.title("🤖 Hitesh Local AI")
-st.caption("Local Gemma 3 chatbot with optional web search")
+st.title("🤖 Hitesh Online AI")
+st.caption("Online AI chatbot with optional web search")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -28,11 +25,7 @@ for message in st.session_state.messages:
 prompt = st.chat_input("Apna message likho...")
 
 if prompt:
-    st.session_state.messages.append({
-        "role": "user",
-        "content": prompt
-    })
-
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
@@ -43,12 +36,12 @@ if prompt:
         try:
             if web_search:
                 with st.spinner("Internet par search ho raha hai..."):
-                    search_results = DDGS(timeout=15).text(
+                    search_results = list(DDGS().text(
                         prompt,
                         region="in-en",
                         safesearch="moderate",
-                        max_results=5
-                    )
+                        max_results=5,
+                    ))
 
                 web_context = "\n\n".join(
                     f"[{number}] {result.get('title', '')}\n"
@@ -56,7 +49,6 @@ if prompt:
                     f"URL: {result.get('href', '')}"
                     for number, result in enumerate(search_results, start=1)
                 )
-
                 model_messages[-1] = {
                     "role": "user",
                     "content": f"""
@@ -72,18 +64,16 @@ Answer in the user's language.
 Use only reliable information from these results.
 Cite sources using [1], [2], etc.
 If results are insufficient, clearly say so.
-"""
+""",
                 }
 
             with st.spinner("Soch raha hoon..."):
                 response = client.chat.completions.create(
-    model="llama-3.3-70b-versatile",
-    messages=model_messages
-)
+                    model="llama-3.3-70b-versatile",
+                    messages=model_messages,
+                )
 
-answer = response.choices[0].message.content
-
-            answer = response.message.content
+            answer = response.choices[0].message.content
             st.markdown(answer)
 
             if search_results:
@@ -97,7 +87,4 @@ answer = response.choices[0].message.content
             answer = f"Error: {error}"
             st.error(answer)
 
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": answer
-    })
+    st.session_state.messages.append({"role": "assistant", "content": answer})
